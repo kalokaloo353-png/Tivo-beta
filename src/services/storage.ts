@@ -941,15 +941,14 @@ class StorageService {
 
   public hasUserLoggedIn(): boolean {
     const status = localStorage.getItem('tivo_is_signed_in');
-    if (status === 'false') return false;
-    return true;
+    return status === 'true';
   }
 
   public setUserLoggedIn(status: boolean): void {
     if (status) {
       localStorage.setItem('tivo_is_signed_in', 'true');
     } else {
-      localStorage.removeItem('tivo_is_signed_in');
+      localStorage.setItem('tivo_is_signed_in', 'false');
     }
   }
 

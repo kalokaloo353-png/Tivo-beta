@@ -4,6 +4,8 @@ import {
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
   signInWithPopup, 
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider, 
   OAuthProvider,
   signOut,
@@ -33,6 +35,21 @@ export const db = firebaseConfig.firestoreDatabaseId
 
 // Providers
 export const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
+
+// Get user profile directly by ID from Firestore
+export async function getUserFromFirestore(userId: string): Promise<User | null> {
+  try {
+    const userRef = doc(db, 'users', userId);
+    const snap = await getDoc(userRef);
+    if (snap.exists()) {
+      return snap.data() as User;
+    }
+  } catch (err) {
+    console.warn('Firestore getUser lookup error:', err);
+  }
+  return null;
+}
 
 // Save or sync user profile in Firestore
 export async function syncUserToFirestore(user: User): Promise<void> {
@@ -149,6 +166,8 @@ export {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signOut,
   onAuthStateChanged,
   OAuthProvider

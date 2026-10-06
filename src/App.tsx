@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ActiveTab, User, Video, LiveStream, Gift } from './types';
 import { storage } from './services/storage';
 import { audioEngine } from './services/audioService';
-import { auth, onAuthStateChanged } from './services/firebase';
+import { auth, onAuthStateChanged, getRedirectResult, getUserFromFirestore } from './services/firebase';
 
 // Components
 import { FeedView } from './components/FeedView';
@@ -45,7 +45,7 @@ export default function App() {
   const [activeShareVideo, setActiveShareVideo] = useState<Video | null>(null);
   const [activeGiftVideo, setActiveGiftVideo] = useState<Video | null>(null);
   const [activeSubscribeCreator, setActiveSubscribeCreator] = useState<User | null>(null);
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState<boolean>(() => !storage.hasUserLoggedIn());
   const [showGiftBoxModal, setShowGiftBoxModal] = useState(false);
   const [showWelcomeRewardModal, setShowWelcomeRewardModal] = useState(false);
   const [tiktokGift, setTiktokGift] = useState<ActiveGiftAnimation | null>(null);
@@ -90,11 +90,38 @@ export default function App() {
     showToast(`Claimed +${amount.toLocaleString()} Coins!`);
   };
 
-  // Firebase auth state observer
+  // Firebase auth state observer & redirect sign-in handler
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (fbUser) => {
+    // Check if user just returned from Google redirect sign-in
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result?.user) {
+          const fbUser = result.user;
+          const userDoc = await getUserFromFirestore(fbUser.uid);
+          if (userDoc) {
+            storage.saveCurrentUser(userDoc);
+            storage.setUserLoggedIn(true);
+            setCurrentUser(userDoc);
+            setShowAuthModal(false);
+            showToast(`Welcome back, ${userDoc.displayName}!`);
+          }
+        }
+      })
+      .catch((e) => console.warn('Redirect check notice:', e));
+
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       if (fbUser) {
-        // Sync or retain current user
+        const existing = await getUserFromFirestore(fbUser.uid);
+        if (existing) {
+          storage.saveCurrentUser(existing);
+          storage.setUserLoggedIn(true);
+          setCurrentUser(existing);
+          setShowAuthModal(false);
+        }
+      } else {
+        if (!storage.hasUserLoggedIn()) {
+          setShowAuthModal(true);
+        }
       }
     });
     return () => unsubscribe();
@@ -198,11 +225,20 @@ export default function App() {
     setVideos(storage.getVideos());
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+    } catch (err) {
+      console.warn('Sign out notice:', err);
+    }
+    storage.setUserLoggedIn(false);
+    setSubView(null);
     setShowAuthModal(true);
+    showToast('Signed out of TIVO');
   };
 
   const handleLoginSuccess = (user: User) => {
+    storage.setUserLoggedIn(true);
     setShowAuthModal(false);
     setCurrentUser(user);
     setUsers(storage.getUsers());
@@ -444,7 +480,14 @@ export default function App() {
       {showAuthModal && (
         <AuthModal
           isOpen={showAuthModal}
-          onClose={() => setShowAuthModal(false)}
+          isRequired={!storage.hasUserLoggedIn()}
+          onClose={() => {
+            if (storage.hasUserLoggedIn()) {
+              setShowAuthModal(false);
+            } else {
+              showToast('Please sign in or create an account to start using TIVO');
+            }
+          }}
           onLoginSuccess={handleLoginSuccess}
         />
       )}
