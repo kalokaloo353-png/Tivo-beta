@@ -358,8 +358,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
       if (code === 'auth/unauthorized-domain') {
         const domain = typeof window !== 'undefined' ? window.location.hostname : 'current domain';
-        setError(`Domain "${domain}" is not in Firebase Authorized Domains.`);
+        setError(`Domain "${domain}" is not in Firebase Authorized Domains yet.`);
         setShowDomainHelp(true);
+        setShowDirectGoogleForm(true);
         setLoading(false);
         return;
       }
