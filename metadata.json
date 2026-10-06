@@ -1,0 +1,6 @@
+{
+  "name": "TIVO - Short Video Platform",
+  "description": "Watch, create, and connect on TIVO. The next-generation vertical short video platform with instant camera creation, music, effects, and social discovery.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

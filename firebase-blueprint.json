@@ -1,0 +1,95 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "TIVO User and Creator profile",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "username": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "avatar": { "type": "string" },
+        "bio": { "type": "string" },
+        "followersCount": { "type": "number" },
+        "followingCount": { "type": "number" },
+        "likesReceivedCount": { "type": "number" },
+        "coins": { "type": "number" },
+        "creatorEarnings": { "type": "number" },
+        "isLive": { "type": "boolean" },
+        "verified": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "username", "email"]
+    },
+    "Video": {
+      "title": "Video",
+      "description": "Short vertical video clip",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "creatorId": { "type": "string" },
+        "videoUrl": { "type": "string" },
+        "thumbnailUrl": { "type": "string" },
+        "caption": { "type": "string" },
+        "likesCount": { "type": "number" },
+        "commentsCount": { "type": "number" },
+        "sharesCount": { "type": "number" },
+        "viewsCount": { "type": "number" },
+        "isExclusive": { "type": "boolean" },
+        "minTier": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "creatorId", "videoUrl"]
+    },
+    "LiveStream": {
+      "title": "LiveStream",
+      "description": "Active live broadcast",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "streamerId": { "type": "string" },
+        "title": { "type": "string" },
+        "viewerCount": { "type": "number" },
+        "totalGiftsCoins": { "type": "number" },
+        "isLive": { "type": "boolean" },
+        "startedAt": { "type": "string" }
+      },
+      "required": ["id", "streamerId", "title"]
+    },
+    "GiftTransaction": {
+      "title": "GiftTransaction",
+      "description": "Virtual gift sent to a creator",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "senderId": { "type": "string" },
+        "receiverId": { "type": "string" },
+        "giftName": { "type": "string" },
+        "coins": { "type": "number" },
+        "targetType": { "type": "string", "enum": ["video", "live"] },
+        "targetId": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "senderId", "receiverId", "coins"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profile collection"
+    },
+    "/videos/{videoId}": {
+      "schema": { "$ref": "#/entities/Video" },
+      "description": "Published video clips"
+    },
+    "/liveStreams/{streamId}": {
+      "schema": { "$ref": "#/entities/LiveStream" },
+      "description": "Active and past live streams"
+    },
+    "/gifts/{giftId}": {
+      "schema": { "$ref": "#/entities/GiftTransaction" },
+      "description": "Gift transactions ledger"
+    }
+  }
+}
